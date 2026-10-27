@@ -1,4 +1,3 @@
-
 import {
     App,
     Modal,
@@ -6,8 +5,11 @@ import {
     Plugin,
     PluginSettingTab,
     Setting,
+    TFile,
     TFolder
 } from 'obsidian';
+
+import { ExerciseImageSelector } from './exercise-image';
 
 interface MobiusFitnessSettings {
     dataFolder: string;
@@ -44,17 +46,22 @@ const DEFAULT_EQUIPMENT = [
     'Elástico'
 ];
 
-// Evita problemas com caracteres especiais no YAML.
+const IMAGE_EXTENSIONS = new Set([
+    'png',
+    'jpg',
+    'jpeg',
+    'webp',
+    'gif'
+]);
+
 function yamlString(value: string): string {
     return JSON.stringify(value);
 }
 
 function yamlList(values: string[]): string[] {
-    if (values.length === 0) {
-        return ['  []'];
-    }
-
-    return values.map(value => `  - ${yamlString(value)}`);
+    return values.map(
+        value => `  - ${yamlString(value)}`
+    );
 }
 
 export default class MobiusFitnessPlugin extends Plugin {
@@ -63,37 +70,37 @@ export default class MobiusFitnessPlugin extends Plugin {
         customEquipment: []
     };
 
+    async onload() {
+        await this.loadSettings();
 
-async onload() {
-    await this.loadSettings();
+        this.addRibbonIcon(
+            'dumbbell',
+            'Criar exercício no Mobius Fitness',
+            () => new ExerciseModal(this.app, this).open()
+        );
 
-    // Ícone na barra lateral: abre o cadastro diretamente.
-    this.addRibbonIcon(
-        'dumbbell',
-        'Criar exercício no Mobius Fitness',
-        () => new ExerciseModal(this.app, this).open()
-    );
+        this.addCommand({
+            id: 'create-exercise',
+            name: 'Criar exercício',
+            callback: () => {
+                new ExerciseModal(this.app, this).open();
+            }
+        });
 
-    // Comando direto para cadastrar exercícios.
-    this.addCommand({
-        id: 'create-exercise',
-        name: 'Criar exercício',
-        callback: () => new ExerciseModal(this.app, this).open()
-    });
+        // Temporariamente abre o cadastro.
+        // Futuramente abrirá o dashboard.
+        this.addCommand({
+            id: 'open-fitness-dashboard',
+            name: 'Abrir painel de treinos',
+            callback: () => {
+                new ExerciseModal(this.app, this).open();
+            }
+        });
 
-    // Mantemos o comando antigo funcionando até
-    // implementarmos o dashboard definitivo.
-    this.addCommand({
-        id: 'open-fitness-dashboard',
-        name: 'Abrir painel de treinos',
-        callback: () => new ExerciseModal(this.app, this).open()
-    });
-
-    this.addSettingTab(
-        new MobiusFitnessSettingTab(this.app, this)
-    );
-}
-
+        this.addSettingTab(
+            new MobiusFitnessSettingTab(this.app, this)
+        );
+    }
 
     async loadSettings() {
         const saved = await this.loadData();
@@ -113,6 +120,10 @@ async onload() {
         await this.saveData(this.settings);
     }
 
+    getMediaFolder(): string {
+        return `${this.settings.dataFolder.trim()}/Midias`;
+    }
+
     getEquipment(): string[] {
         return [...new Set([
             ...DEFAULT_EQUIPMENT,
@@ -124,11 +135,14 @@ async onload() {
         const cleanName = name.trim();
 
         if (!cleanName) {
-            throw new Error('Informe o nome do equipamento.');
+            throw new Error(
+                'Informe o nome do equipamento.'
+            );
         }
 
         const existing = this.getEquipment().find(
-            item => item.toLowerCase() === cleanName.toLowerCase()
+            item =>
+                item.toLowerCase() === cleanName.toLowerCase()
         );
 
         if (existing) {
@@ -145,18 +159,22 @@ async onload() {
         const baseFolder = this.settings.dataFolder.trim();
 
         if (!baseFolder || baseFolder === '/') {
-            throw new Error('Selecione uma pasta de dados válida.');
+            throw new Error(
+                'Selecione uma pasta de dados válida.'
+            );
         }
 
         const folders = [
             baseFolder,
             `${baseFolder}/Exercicios`,
             `${baseFolder}/Fichas`,
-            `${baseFolder}/Sessoes`
+            `${baseFolder}/Sessoes`,
+            `${baseFolder}/Midias`
         ];
 
         for (const folder of folders) {
-            const existing = this.app.vault.getAbstractFileByPath(folder);
+            const existing =
+                this.app.vault.getAbstractFileByPath(folder);
 
             if (!existing) {
                 await this.app.vault.createFolder(folder);
@@ -172,35 +190,82 @@ async onload() {
         name: string,
         primaryMuscle: string,
         secondaryMuscles: string[],
-        equipment: string[]
+        equipment: string[],
+        imagePath: string
     ) {
         const cleanName = name.trim();
 
         if (!cleanName) {
-            throw new Error('Informe o nome do exercício.');
+            throw new Error(
+                'Informe o nome do exercício.'
+            );
         }
 
-        if (/[\\/:*?"<>|#^\[\]]/.test(cleanName) ||
-            cleanName === '.' || cleanName === '..') {
-            throw new Error('O nome contém caracteres inválidos.');
+        if (
+            /[\\/:*?"<>|#^\[\]]/.test(cleanName) ||
+            cleanName === '.' ||
+            cleanName === '..'
+        ) {
+            throw new Error(
+                'O nome contém caracteres inválidos.'
+            );
         }
 
         if (!MUSCLE_GROUPS.includes(primaryMuscle)) {
-            throw new Error('Selecione um músculo principal válido.');
+            throw new Error(
+                'Selecione um músculo principal válido.'
+            );
         }
 
         if (secondaryMuscles.some(muscle =>
             !MUSCLE_GROUPS.includes(muscle) ||
             muscle === primaryMuscle
         )) {
-            throw new Error('Seleção de músculos secundários inválida.');
+            throw new Error(
+                'Seleção de músculos secundários inválida.'
+            );
         }
 
-        const baseFolder = this.settings.dataFolder.trim();
-        const path = `${baseFolder}/Exercicios/${cleanName}.md`;
+        if (imagePath) {
+            const imageFile =
+                this.app.vault.getAbstractFileByPath(
+                    imagePath
+                );
+
+            if (!(imageFile instanceof TFile)) {
+                throw new Error(
+                    'A imagem selecionada não foi encontrada.'
+                );
+            }
+
+            if (
+                !IMAGE_EXTENSIONS.has(
+                    imageFile.extension.toLowerCase()
+                ) ||
+                imageFile.parent?.path !== this.getMediaFolder()
+            ) {
+                throw new Error(
+                    'Selecione uma imagem válida da pasta Midias.'
+                );
+            }
+        }
+
+        const baseFolder =
+            this.settings.dataFolder.trim();
+
+        if (!baseFolder || baseFolder === '/') {
+            throw new Error(
+                'Selecione uma pasta de dados válida.'
+            );
+        }
+
+        const path =
+            `${baseFolder}/Exercicios/${cleanName}.md`;
 
         if (this.app.vault.getAbstractFileByPath(path)) {
-            throw new Error('Já existe um exercício com esse nome.');
+            throw new Error(
+                'Já existe um exercício com esse nome.'
+            );
         }
 
         await this.ensureDataFolders();
@@ -222,6 +287,7 @@ async onload() {
                     ...yamlList(equipment)
                 ]
                 : ['equipamentos: []']),
+            `imagem: ${yamlString(imagePath)}`,
             '---',
             '',
             `# ${cleanName}`,
@@ -237,7 +303,10 @@ async onload() {
 class MobiusFitnessSettingTab extends PluginSettingTab {
     plugin: MobiusFitnessPlugin;
 
-    constructor(app: App, plugin: MobiusFitnessPlugin) {
+    constructor(
+        app: App,
+        plugin: MobiusFitnessPlugin
+    ) {
         super(app, plugin);
         this.plugin = plugin;
     }
@@ -249,23 +318,30 @@ class MobiusFitnessSettingTab extends PluginSettingTab {
         const folders = this.app.vault
             .getAllLoadedFiles()
             .filter((file): file is TFolder =>
-                file instanceof TFolder && file.path !== '/'
+                file instanceof TFolder &&
+                file.path !== '/'
             )
-            .sort((a, b) => a.path.localeCompare(b.path));
+            .sort((a, b) =>
+                a.path.localeCompare(b.path)
+            );
 
         new Setting(containerEl)
             .setName('Pasta de dados')
             .setDesc(
-                'Selecione onde serão armazenados exercícios, fichas e sessões.'
+                'Selecione onde serão armazenados exercícios, fichas, sessões e mídias.'
             )
             .addDropdown(dropdown => {
-                const current = this.plugin.settings.dataFolder;
+                const current =
+                    this.plugin.settings.dataFolder;
 
                 dropdown.addOption(current, current);
 
                 for (const folder of folders) {
                     if (folder.path !== current) {
-                        dropdown.addOption(folder.path, folder.path);
+                        dropdown.addOption(
+                            folder.path,
+                            folder.path
+                        );
                     }
                 }
 
@@ -279,42 +355,6 @@ class MobiusFitnessSettingTab extends PluginSettingTab {
     }
 }
 
-class FitnessModal extends Modal {
-    plugin: MobiusFitnessPlugin;
-
-    constructor(app: App, plugin: MobiusFitnessPlugin) {
-        super(app);
-        this.plugin = plugin;
-    }
-
-    onOpen() {
-        const { contentEl } = this;
-        contentEl.empty();
-
-        contentEl.createEl('h2', {
-            text: 'Mobius Fitness'
-        });
-
-        contentEl.createEl('p', {
-            text: 'Seu espaço de treinamento físico no Obsidian.'
-        });
-
-        new Setting(contentEl)
-            .addButton(button => button
-                .setButtonText('Cadastrar exercício')
-                .setCta()
-                .onClick(() => {
-                    this.close();
-                    new ExerciseModal(this.app, this.plugin).open();
-                })
-            );
-    }
-
-    onClose() {
-        this.contentEl.empty();
-    }
-}
-
 class ExerciseModal extends Modal {
     plugin: MobiusFitnessPlugin;
 
@@ -322,8 +362,12 @@ class ExerciseModal extends Modal {
     private primaryMuscle = 'Peito';
     private secondaryMuscles: string[] = [];
     private selectedEquipment: string[] = [];
+    private imagePath = '';
 
-    constructor(app: App, plugin: MobiusFitnessPlugin) {
+    constructor(
+        app: App,
+        plugin: MobiusFitnessPlugin
+    ) {
         super(app);
         this.plugin = plugin;
     }
@@ -376,7 +420,7 @@ class ExerciseModal extends Modal {
         });
 
         contentEl.createEl('p', {
-            text: 'Selecione todos os músculos secundários envolvidos.'
+            text: 'Selecione os músculos secundários envolvidos.'
         });
 
         for (const muscle of MUSCLE_GROUPS) {
@@ -439,7 +483,9 @@ class ExerciseModal extends Modal {
 
         new Setting(contentEl)
             .setName('Novo equipamento')
-            .setDesc('Adicione um equipamento que não esteja na lista.')
+            .setDesc(
+                'Adicione um equipamento que não esteja na lista.'
+            )
             .addText(text => text
                 .setPlaceholder('Ex.: Banco inclinado')
                 .onChange(value => {
@@ -449,15 +495,24 @@ class ExerciseModal extends Modal {
             .addButton(button => button
                 .setButtonText('Adicionar')
                 .onClick(async () => {
+                    button.setDisabled(true);
+
                     try {
                         const equipment =
-                            await this.plugin.addEquipment(newEquipment);
+                            await this.plugin.addEquipment(
+                                newEquipment
+                            );
 
-                        if (!this.selectedEquipment.includes(equipment)) {
+                        if (
+                            !this.selectedEquipment.includes(equipment)
+                        ) {
                             this.selectedEquipment.push(equipment);
                         }
 
-                        new Notice(`Equipamento "${equipment}" adicionado.`);
+                        new Notice(
+                            `Equipamento "${equipment}" adicionado.`
+                        );
+
                         this.render();
                     } catch (error) {
                         new Notice(
@@ -465,9 +520,26 @@ class ExerciseModal extends Modal {
                                 ? error.message
                                 : 'Erro ao adicionar equipamento.'
                         );
+
+                        button.setDisabled(false);
                     }
                 })
             );
+
+        // Seleção de imagens apenas da pasta Midias.
+        const imageContainer = contentEl.createDiv();
+
+        const imageSelector = new ExerciseImageSelector(
+            this.app,
+            imageContainer,
+            this.plugin.getMediaFolder(),
+            this.imagePath,
+            path => {
+                this.imagePath = path;
+            }
+        );
+
+        imageSelector.render();
 
         new Setting(contentEl)
             .addButton(button => button
@@ -481,10 +553,14 @@ class ExerciseModal extends Modal {
                             this.exerciseName,
                             this.primaryMuscle,
                             this.secondaryMuscles,
-                            this.selectedEquipment
+                            this.selectedEquipment,
+                            this.imagePath
                         );
 
-                        new Notice('Exercício cadastrado com sucesso!');
+                        new Notice(
+                            'Exercício cadastrado com sucesso!'
+                        );
+
                         this.close();
                     } catch (error) {
                         new Notice(
@@ -492,7 +568,7 @@ class ExerciseModal extends Modal {
                                 ? error.message
                                 : 'Erro ao salvar exercício.'
                         );
-                    } finally {
+
                         button.setDisabled(false);
                     }
                 })
