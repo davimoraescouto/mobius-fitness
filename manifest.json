@@ -1,0 +1,10 @@
+
+{
+  "id": "mobius-fitness",
+  "name": "Mobius Fitness",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.0",
+  "description": "An offline-first workout tracker for Obsidian. Track exercises, sets, reps, weights and perceived exertion.",
+  "author": "Davi Couto",
+  "isDesktopOnly": false
+}
