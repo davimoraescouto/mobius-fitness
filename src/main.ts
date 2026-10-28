@@ -1,6 +1,6 @@
 
 import { Plugin } from 'obsidian';
-
+import { AssessmentComparisonModal } from './assessment-comparison-modal';
 import { AssessmentReader } from './assessment-reader';
 import { AssessmentHistoryModal } from './assessment-history-modal';
 import { AssessmentModal } from './assessment-modal';
@@ -19,6 +19,18 @@ export default class MobiusFitnessPlugin extends Plugin {
     settings: MobiusFitnessSettings = {
         ...DEFAULT_SETTINGS
     };
+
+    private openAssessmentComparison(): void {
+        const reader = new AssessmentReader(
+            this.app,
+            this.settings.dataFolder
+        );
+
+        new AssessmentComparisonModal(
+            this.app,
+            reader
+        ).open();
+    }
 
     async onload(): Promise<void> {
         await this.loadSettings();
@@ -52,6 +64,14 @@ export default class MobiusFitnessPlugin extends Plugin {
         this.addSettingTab(
             new MobiusFitnessSettingTab(this.app, this)
         );
+
+        this.addCommand({
+            id: 'compare-physical-assessments',
+            name: 'Comparar avaliações físicas',
+            callback: () => {
+                this.openAssessmentComparison();
+            }
+        });
     }
 
     private openAssessmentModal(): void {
