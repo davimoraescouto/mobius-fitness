@@ -8,17 +8,37 @@ import {
 
 import { MEASUREMENT_GROUPS } from './measurements';
 
+import {
+    getLanguage,
+    getMeasurementLabel,
+    t
+} from './i18n';
+
+function getLocale(): string {
+    return getLanguage() === 'pt-BR'
+        ? 'pt-BR'
+        : 'en-US';
+}
+
 function formatDate(value: string): string {
     const [year, month, day] = value.split('-');
 
-    return `${day}/${month}/${year}`;
+    if (!year || !month || !day) {
+        return value;
+    }
+
+    if (getLanguage() === 'pt-BR') {
+        return `${day}/${month}/${year}`;
+    }
+
+    return `${month}/${day}/${year}`;
 }
 
 function formatMeasurement(
     value: number,
     unit: string
 ): string {
-    return `${value.toLocaleString('pt-BR')} ${unit}`;
+    return `${value.toLocaleString(getLocale())} ${unit}`;
 }
 
 export class AssessmentHistoryModal extends Modal {
@@ -34,25 +54,40 @@ export class AssessmentHistoryModal extends Modal {
         contentEl.empty();
 
         contentEl.createEl('h2', {
-            text: 'Histórico de avaliações físicas'
+            text: t('assessmentHistory', 'title')
         });
 
-        const assessments = this.reader.readAllAssessments();
+        const assessments =
+            this.reader.readAllAssessments();
+
+        const countText = assessments.length === 1
+            ? t('assessmentHistory', 'countOne')
+            : t('assessmentHistory', 'countMany')
+                .replace(
+                    '{count}',
+                    String(assessments.length)
+                );
 
         contentEl.createEl('p', {
-            text: `${assessments.length} avaliação(ões) encontrada(s).`
+            text: countText
         });
 
         if (assessments.length === 0) {
             contentEl.createEl('p', {
-                text: 'Nenhuma avaliação física encontrada na pasta configurada.'
+                text: t(
+                    'assessmentHistory',
+                    'noAssessments'
+                )
             });
 
             return;
         }
 
         for (const assessment of assessments) {
-            this.renderAssessment(contentEl, assessment);
+            this.renderAssessment(
+                contentEl,
+                assessment
+            );
         }
     }
 
@@ -88,21 +123,21 @@ export class AssessmentHistoryModal extends Modal {
                 this.close();
             } catch (error) {
                 console.error(
-                    'Mobius Fitness: erro ao abrir avaliação.',
+                    'Mobius Fitness: failed to open assessment.',
                     error
                 );
 
                 new Notice(
-                    'Não foi possível abrir a avaliação.'
+                    t('assessmentHistory', 'openError')
                 );
             }
         });
 
-        if (assessment.status !== 'valid') {
-            const warning = section.createEl('p', {
-                text: assessment.warning ??
-                    'Não foi possível interpretar os dados desta avaliação.'
-            });
+if (assessment.status !== 'valid') {
+    const warning = section.createEl('p', {
+        text: assessment.warning ??
+            t('assessmentHistory', 'invalidAssessment')
+    });
 
             warning.style.color =
                 assessment.status === 'pending'
@@ -131,7 +166,7 @@ export class AssessmentHistoryModal extends Modal {
                 const line = section.createDiv();
 
                 line.createSpan({
-                    text: `${field.label}: `
+                    text: `${getMeasurementLabel(field.key)}: `
                 });
 
                 const result = line.createSpan({
@@ -147,7 +182,10 @@ export class AssessmentHistoryModal extends Modal {
 
         if (!hasMeasurements) {
             const empty = section.createEl('p', {
-                text: 'Sem medidas registradas.'
+                text: t(
+                    'assessmentHistory',
+                    'noMeasurements'
+                )
             });
 
             empty.style.color = 'var(--text-muted)';

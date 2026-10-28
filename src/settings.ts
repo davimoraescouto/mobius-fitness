@@ -7,12 +7,23 @@ import {
     TFolder
 } from 'obsidian';
 
+import {
+    setLanguage,
+    t
+} from './i18n';
+
+import type {
+    LanguagePreference
+} from './i18n';
+
 export interface MobiusFitnessSettings {
     dataFolder: string;
+    language: LanguagePreference;
 }
 
 export const DEFAULT_SETTINGS: MobiusFitnessSettings = {
-    dataFolder: 'Mobius Fitness'
+    dataFolder: 'Mobius Fitness',
+    language: 'auto'
 };
 
 type SettingsPlugin = Plugin & {
@@ -46,9 +57,46 @@ export class MobiusFitnessSettingTab extends PluginSettingTab {
             );
 
         new Setting(containerEl)
-            .setName('Pasta de dados')
+            .setName(t('settings', 'language'))
+            .setDesc(t('settings', 'languageDescription'))
+            .addDropdown(dropdown => {
+                dropdown
+                    .addOption(
+                        'auto',
+                        t('settings', 'automatic')
+                    )
+                    .addOption(
+                        'pt-BR',
+                        t('settings', 'portuguese')
+                    )
+                    .addOption(
+                        'en',
+                        t('settings', 'english')
+                    );
+
+                dropdown.setValue(
+                    this.plugin.settings.language
+                );
+
+                dropdown.onChange(async value => {
+                    const language =
+                        value as LanguagePreference;
+
+                    this.plugin.settings.language = language;
+
+                    setLanguage(language);
+
+                    await this.plugin.saveSettings();
+
+                    // Atualiza os rótulos desta tela.
+                    this.display();
+                });
+            });
+
+        new Setting(containerEl)
+            .setName(t('settings', 'dataFolder'))
             .setDesc(
-                'Pasta onde serão armazenadas as avaliações físicas.'
+                t('settings', 'dataFolderDescription')
             )
             .addDropdown(dropdown => {
                 const current =

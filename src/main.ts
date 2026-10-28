@@ -1,11 +1,17 @@
 
 import { Plugin } from 'obsidian';
+
 import { AssessmentTrendsModal } from './assessment-trends-modal';
 import { AssessmentComparisonModal } from './assessment-comparison-modal';
 import { AssessmentReader } from './assessment-reader';
 import { AssessmentHistoryModal } from './assessment-history-modal';
 import { AssessmentModal } from './assessment-modal';
 import { AssessmentService } from './assessment-service';
+
+import {
+    setLanguage,
+    t
+} from './i18n';
 
 import {
     DEFAULT_SETTINGS,
@@ -48,39 +54,39 @@ export default class MobiusFitnessPlugin extends Plugin {
     async onload(): Promise<void> {
         await this.loadSettings();
 
+        // Aplica o idioma salvo nas configurações.
+        setLanguage(this.settings.language);
+
         // Ícone lateral para criar uma avaliação física.
         this.addRibbonIcon(
             'activity',
-            'Nova avaliação física',
+            t('commands', 'newAssessment'),
             () => this.openAssessmentModal()
         );
 
-        // Comando para criar uma nova avaliação física.
         this.addCommand({
             id: 'create-physical-assessment',
-            name: 'Nova avaliação física',
+            name: t('commands', 'newAssessment'),
             callback: () => {
                 this.openAssessmentModal();
             }
         });
 
-        // Comando para visualizar o histórico de avaliações.
         this.addCommand({
             id: 'open-physical-assessment-history',
-            name: 'Histórico de avaliações físicas',
+            name: t('commands', 'assessmentHistory'),
             callback: () => {
                 this.openAssessmentHistory();
             }
         });
 
-        // Configurações do plugin.
         this.addSettingTab(
             new MobiusFitnessSettingTab(this.app, this)
         );
 
         this.addCommand({
             id: 'compare-physical-assessments',
-            name: 'Comparar avaliações físicas',
+            name: t('commands', 'compareAssessments'),
             callback: () => {
                 this.openAssessmentComparison();
             }
@@ -88,7 +94,7 @@ export default class MobiusFitnessPlugin extends Plugin {
 
         this.addCommand({
             id: 'open-physical-assessment-trends',
-            name: 'Evolução corporal',
+            name: t('commands', 'assessmentTrends'),
             callback: () => {
                 this.openAssessmentTrends();
             }

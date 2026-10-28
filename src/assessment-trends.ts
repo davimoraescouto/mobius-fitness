@@ -1,6 +1,6 @@
 
 import type { AssessmentData } from './assessment-reader';
-
+import { t } from './i18n';
 import { MEASUREMENT_GROUPS } from './measurements';
 
 export interface TrendPoint {
@@ -25,7 +25,8 @@ export function getMeasurementTrend(
 
     if (!field) {
         throw new Error(
-            `Medida desconhecida: ${measurementKey}`
+            t('assessmentTrends', 'unknownMeasurement')
+                .replace('{measurement}', measurementKey)
         );
     }
 

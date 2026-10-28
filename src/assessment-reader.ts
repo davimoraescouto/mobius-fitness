@@ -2,6 +2,7 @@
 import { App, TFile, TFolder } from 'obsidian';
 
 import { MEASUREMENT_GROUPS } from './measurements';
+import { t } from './i18n';
 
 export interface AssessmentFile {
     date: string;
@@ -73,7 +74,7 @@ export class AssessmentReader {
     constructor(
         private readonly app: App,
         private readonly dataFolder: string
-    ) {}
+    ) { }
 
     listAssessments(): AssessmentFile[] {
         const folderPath = this.dataFolder.trim();
@@ -135,7 +136,7 @@ export class AssessmentReader {
                 ...assessment,
                 measurements,
                 status: 'pending',
-                warning: 'Metadados ainda não disponíveis.'
+                warning: t('assessmentHistory', 'metadataPending')
             };
         }
 
@@ -144,7 +145,7 @@ export class AssessmentReader {
                 ...assessment,
                 measurements,
                 status: 'invalid',
-                warning: 'Frontmatter YAML ausente ou não reconhecido.'
+                warning: t('assessmentHistory', 'yamlMissing')
             };
         }
 
@@ -156,7 +157,7 @@ export class AssessmentReader {
                 ...assessment,
                 measurements,
                 status: 'invalid',
-                warning: 'Frontmatter YAML fora do início do arquivo.'
+                warning: t('assessmentHistory', 'yamlNotAtStart')
             };
         }
 
@@ -169,7 +170,7 @@ export class AssessmentReader {
                 ...assessment,
                 measurements,
                 status: 'invalid',
-                warning: 'Tipo de avaliação ausente ou inválido.'
+                warning: t('assessmentHistory', 'invalidAssessmentType')
             };
         }
 

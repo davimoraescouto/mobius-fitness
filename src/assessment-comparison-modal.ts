@@ -17,19 +17,38 @@ import {
     type MeasurementComparison
 } from './assessment-comparison';
 
+import {
+    getLanguage,
+    getMeasurementLabel,
+    t
+} from './i18n';
+
 function formatDate(value: string): string {
     const [year, month, day] = value.split('-');
-    return `${day}/${month}/${year}`;
+
+    if (!year || !month || !day) {
+        return value;
+    }
+
+    return getLanguage() === 'pt-BR'
+        ? `${day}/${month}/${year}`
+        : `${month}/${day}/${year}`;
 }
 
 function formatNumber(value: number): string {
-    return value.toLocaleString('pt-BR', {
+    const locale = getLanguage() === 'pt-BR'
+        ? 'pt-BR'
+        : 'en-US';
+
+    return value.toLocaleString(locale, {
         maximumFractionDigits: 2
     });
 }
 
 function formatSignedNumber(value: number): string {
-    const normalized = Object.is(value, -0) ? 0 : value;
+    const normalized = Object.is(value, -0)
+        ? 0
+        : value;
 
     return `${normalized > 0 ? '+' : ''}${formatNumber(normalized)}`;
 }
@@ -50,7 +69,9 @@ export class AssessmentComparisonModal extends Modal {
     onOpen(): void {
         this.assessments = this.reader
             .readAllAssessments()
-            .filter(assessment => assessment.status === 'valid');
+            .filter(
+                assessment => assessment.status === 'valid'
+            );
 
         this.render();
     }
@@ -60,12 +81,15 @@ export class AssessmentComparisonModal extends Modal {
         contentEl.empty();
 
         contentEl.createEl('h2', {
-            text: 'Comparar avaliações físicas'
+            text: t('assessmentComparison', 'title')
         });
 
         if (this.assessments.length < 2) {
             contentEl.createEl('p', {
-                text: 'São necessárias pelo menos duas avaliações válidas para realizar uma comparação.'
+                text: t(
+                    'assessmentComparison',
+                    'minimumAssessments'
+                )
             });
             return;
         }
@@ -81,7 +105,12 @@ export class AssessmentComparisonModal extends Modal {
         this.previousDate = previous.date;
 
         new Setting(contentEl)
-            .setName('Avaliação anterior')
+            .setName(
+                t(
+                    'assessmentComparison',
+                    'previousAssessment'
+                )
+            )
             .addDropdown(dropdown => {
                 for (const assessment of this.assessments) {
                     dropdown.addOption(
@@ -98,7 +127,12 @@ export class AssessmentComparisonModal extends Modal {
             });
 
         new Setting(contentEl)
-            .setName('Avaliação recente')
+            .setName(
+                t(
+                    'assessmentComparison',
+                    'currentAssessment'
+                )
+            )
             .addDropdown(dropdown => {
                 for (const assessment of this.assessments) {
                     dropdown.addOption(
@@ -121,7 +155,9 @@ export class AssessmentComparisonModal extends Modal {
         new Setting(contentEl)
             .addButton(button => {
                 button
-                    .setButtonText('Comparar')
+                    .setButtonText(
+                        t('assessmentComparison', 'compare')
+                    )
                     .setCta()
                     .onClick(() => {
                         this.runComparison(results);
@@ -146,8 +182,14 @@ export class AssessmentComparisonModal extends Modal {
                 assessment.date === this.currentDate
         );
 
-        if (!previous || !current) {
-            new Notice('Selecione duas avaliações válidas.');
+        if (
+            !previous ||
+            !current ||
+            previous.date === current.date
+        ) {
+            new Notice(
+                t('assessmentComparison', 'selectValid')
+            );
             return;
         }
 
@@ -159,21 +201,35 @@ export class AssessmentComparisonModal extends Modal {
                 current
             );
         } catch (error) {
+            console.error(
+                'Mobius Fitness: comparison failed.',
+                error
+            );
+
             container.createEl('p', {
                 text: error instanceof Error
                     ? error.message
-                    : 'Não foi possível comparar as avaliações.'
+                    : t(
+                        'assessmentComparison',
+                        'compareError'
+                    )
             });
+
             return;
         }
 
         container.createEl('h3', {
-            text: `${formatDate(comparison.previousDate)} → ${formatDate(comparison.currentDate)}`
+            text:
+                `${formatDate(comparison.previousDate)} → ` +
+                `${formatDate(comparison.currentDate)}`
         });
 
         if (comparison.measurements.length === 0) {
             container.createEl('p', {
-                text: 'As avaliações não possuem medidas em comum.'
+                text: t(
+                    'assessmentComparison',
+                    'noCommonMeasurements'
+                )
             });
             return;
         }
@@ -203,7 +259,7 @@ export class AssessmentComparisonModal extends Modal {
             '1px solid var(--background-modifier-border)';
 
         const title = card.createEl('strong', {
-            text: measurement.label
+            text: getMeasurementLabel(measurement.key)
         });
 
         title.style.display = 'block';
@@ -219,30 +275,43 @@ export class AssessmentComparisonModal extends Modal {
         values.style.gap = '12px';
 
         const previous = values.createDiv();
+
         const previousLabel = previous.createDiv({
-            text: 'Anterior'
+            text: t(
+                'assessmentComparison',
+                'previous'
+            )
         });
 
         previousLabel.style.color = 'var(--text-muted)';
         previousLabel.style.fontSize = '0.85em';
 
         previous.createEl('strong', {
-            text: `${formatNumber(measurement.previous)} ${measurement.unit}`
+            text:
+                `${formatNumber(measurement.previous)} ` +
+                measurement.unit
         });
 
         const current = values.createDiv();
+
         const currentLabel = current.createDiv({
-            text: 'Atual'
+            text: t(
+                'assessmentComparison',
+                'current'
+            )
         });
 
         currentLabel.style.color = 'var(--text-muted)';
         currentLabel.style.fontSize = '0.85em';
 
         current.createEl('strong', {
-            text: `${formatNumber(measurement.current)} ${measurement.unit}`
+            text:
+                `${formatNumber(measurement.current)} ` +
+                measurement.unit
         });
 
         const variation = card.createDiv();
+
         variation.style.marginTop = '10px';
         variation.style.paddingTop = '8px';
         variation.style.borderTop =
@@ -250,20 +319,37 @@ export class AssessmentComparisonModal extends Modal {
 
         const absoluteDifference =
             measurement.unit === '%'
-                ? `${formatSignedNumber(measurement.difference)} p.p.`
-                : `${formatSignedNumber(measurement.difference)} ${measurement.unit}`;
+                ? (
+                    `${formatSignedNumber(measurement.difference)} ` +
+                    t(
+                        'assessmentComparison',
+                        'percentagePoints'
+                    )
+                )
+                : (
+                    `${formatSignedNumber(measurement.difference)} ` +
+                    measurement.unit
+                );
 
         const percentageDifference =
             measurement.percentageChange === null
-                ? 'N/D'
-                : `${formatSignedNumber(measurement.percentageChange)}%`;
+                ? t(
+                    'assessmentComparison',
+                    'notAvailable'
+                )
+                : (
+                    `${formatSignedNumber(measurement.percentageChange)}%`
+                );
 
         variation.createSpan({
-            text: 'Variação: '
+            text:
+                `${t('assessmentComparison', 'variation')}: `
         });
 
         variation.createEl('strong', {
-            text: `${absoluteDifference} (${percentageDifference})`
+            text:
+                `${absoluteDifference} ` +
+                `(${percentageDifference})`
         });
     }
 

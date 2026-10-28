@@ -3,6 +3,8 @@ import type { AssessmentData } from './assessment-reader';
 
 import { MEASUREMENT_GROUPS } from './measurements';
 
+import { t } from './i18n';
+
 export interface MeasurementComparison {
     key: string;
     label: string;
@@ -28,13 +30,13 @@ export function compareAssessments(
         current.status !== 'valid'
     ) {
         throw new Error(
-            'Selecione duas avaliações válidas para comparar.'
+            t('assessmentComparison', 'invalidSelection')
         );
     }
 
     if (previous.date >= current.date) {
         throw new Error(
-            'A avaliação anterior deve ter uma data mais antiga.'
+            t('assessmentComparison', 'invalidDateOrder')
         );
     }
 

@@ -1,4 +1,4 @@
-
+import { t } from './i18n';
 export interface MeasurementField {
     key: string;
     label: string;
@@ -55,6 +55,7 @@ export const MEASUREMENT_GROUPS: MeasurementGroup[] = [
     }
 ];
 
+
 export function parseMeasurement(
     value: string,
     label: string
@@ -69,7 +70,8 @@ export function parseMeasurement(
 
     if (!/^\d+(\.\d+)?$/.test(normalized)) {
         throw new Error(
-            `Informe um valor válido para "${label}".`
+            t('measurementValidation', 'invalidInput')
+                .replace('{measurement}', label)
         );
     }
 
@@ -77,9 +79,11 @@ export function parseMeasurement(
 
     if (!Number.isFinite(number)) {
         throw new Error(
-            `Valor inválido para "${label}".`
+            t('measurementValidation', 'invalidValue')
+                .replace('{measurement}', label)
         );
     }
 
     return number;
 }
+

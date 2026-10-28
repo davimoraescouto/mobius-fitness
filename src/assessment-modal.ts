@@ -7,6 +7,11 @@ import {
 } from 'obsidian';
 
 import { MEASUREMENT_GROUPS } from './measurements';
+import {
+    t,
+    getMeasurementLabel,
+    getMeasurementGroupTitle
+} from './i18n';
 
 export type SaveAssessmentCallback = (
     date: string,
@@ -43,18 +48,20 @@ export class AssessmentModal extends Modal {
         contentEl.empty();
 
         contentEl.createEl('h2', {
-            text: 'Nova avaliação física'
+            text: t('assessments', 'new')
         });
 
         contentEl.createEl('p', {
-            text: 'Preencha apenas as medidas que você registrou.'
+            text: t('assessmentForm', 'introduction')
         });
 
         new Setting(contentEl)
-            .setName('Data da avaliação')
-            .setDesc('Informe a data no formato AAAA-MM-DD.')
+            .setName(t('assessmentForm', 'date'))
+            .setDesc(t('assessmentForm', 'dateDescription'))
             .addText(text => text
-                .setPlaceholder('AAAA-MM-DD')
+                .setPlaceholder(
+                    t('assessmentForm', 'datePlaceholder')
+                )
                 .setValue(this.date)
                 .onChange(value => {
                     this.date = value;
@@ -69,14 +76,17 @@ export class AssessmentModal extends Modal {
             }
 
             section.createEl('summary', {
-                text: group.title
+                text: getMeasurementGroupTitle(group.id)
             });
 
             for (const field of group.fields) {
                 new Setting(section)
-                    .setName(`${field.label} (${field.unit})`)
-                    .addText(text => text
-                        .setPlaceholder('Opcional')
+                    .setName(
+                        `${getMeasurementLabel(field.key)} (${field.unit})`
+                    ).addText(text => text
+                        .setPlaceholder(
+                            t('assessmentForm', 'optional')
+                        )
                         .setValue(
                             this.values[field.key] ?? ''
                         )
@@ -88,17 +98,17 @@ export class AssessmentModal extends Modal {
         }
 
         contentEl.createEl('h3', {
-            text: 'Rotina alimentar'
+            text: t('assessmentForm', 'diet')
         });
 
         contentEl.createEl('p', {
-            text: 'Descreva seus hábitos alimentares neste período.'
+            text: t('assessmentForm', 'dietDescription')
         });
 
         new Setting(contentEl)
             .addTextArea(text => {
                 text.setPlaceholder(
-                    'Ex.: Café da manhã reforçado, uso de hipercalórico...'
+                    t('assessmentForm', 'dietPlaceholder')
                 );
 
                 text.setValue(this.diet);
@@ -112,13 +122,16 @@ export class AssessmentModal extends Modal {
             });
 
         contentEl.createEl('h3', {
-            text: 'Observações'
+            text: t('assessmentForm', 'observations')
         });
 
         new Setting(contentEl)
             .addTextArea(text => {
                 text.setPlaceholder(
-                    'Ex.: Mais disposição, melhora no condicionamento...'
+                    t(
+                        'assessmentForm',
+                        'observationsPlaceholder'
+                    )
                 );
 
                 text.setValue(this.observations);
@@ -133,7 +146,9 @@ export class AssessmentModal extends Modal {
 
         new Setting(contentEl)
             .addButton(button => button
-                .setButtonText('Salvar avaliação')
+                .setButtonText(
+                    t('assessmentForm', 'save')
+                )
                 .setCta()
                 .onClick(async () => {
                     button.setDisabled(true);
@@ -147,7 +162,7 @@ export class AssessmentModal extends Modal {
                         );
 
                         new Notice(
-                            'Avaliação física salva com sucesso!'
+                            t('assessmentForm', 'saveSuccess')
                         );
 
                         const file =
@@ -164,7 +179,7 @@ export class AssessmentModal extends Modal {
                         new Notice(
                             error instanceof Error
                                 ? error.message
-                                : 'Erro ao salvar avaliação.'
+                                : t('assessmentForm', 'saveError')
                         );
                     } finally {
                         button.setDisabled(false);
