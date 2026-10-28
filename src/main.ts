@@ -1,5 +1,6 @@
 
 import { Plugin } from 'obsidian';
+import { AssessmentTrendsModal } from './assessment-trends-modal';
 import { AssessmentComparisonModal } from './assessment-comparison-modal';
 import { AssessmentReader } from './assessment-reader';
 import { AssessmentHistoryModal } from './assessment-history-modal';
@@ -19,6 +20,18 @@ export default class MobiusFitnessPlugin extends Plugin {
     settings: MobiusFitnessSettings = {
         ...DEFAULT_SETTINGS
     };
+
+    private openAssessmentTrends(): void {
+        const reader = new AssessmentReader(
+            this.app,
+            this.settings.dataFolder
+        );
+
+        new AssessmentTrendsModal(
+            this.app,
+            reader
+        ).open();
+    }
 
     private openAssessmentComparison(): void {
         const reader = new AssessmentReader(
@@ -70,6 +83,14 @@ export default class MobiusFitnessPlugin extends Plugin {
             name: 'Comparar avaliações físicas',
             callback: () => {
                 this.openAssessmentComparison();
+            }
+        });
+
+        this.addCommand({
+            id: 'open-physical-assessment-trends',
+            name: 'Evolução corporal',
+            callback: () => {
+                this.openAssessmentTrends();
             }
         });
     }
