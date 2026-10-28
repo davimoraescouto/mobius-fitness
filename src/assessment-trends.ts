@@ -72,3 +72,88 @@ export function getAvailableMeasurementTrends(
         )
         .filter(trend => trend.points.length > 0);
 }
+
+
+export type TrendPeriod = 30 | 90 | 180 | 365 | 'all';
+
+export function filterTrendByPeriod(
+    trend: MeasurementTrend,
+    assessments: AssessmentData[],
+    period: TrendPeriod
+): MeasurementTrend {
+    if (period === 'all') {
+        return {
+            ...trend,
+            points: [...trend.points]
+        };
+    }
+
+    const validDates = assessments
+        .filter(assessment => assessment.status === 'valid')
+        .map(assessment => assessment.date)
+        .sort();
+
+    const latestDate = validDates[validDates.length - 1];
+
+    if (!latestDate) {
+        return {
+            ...trend,
+            points: []
+        };
+    }
+
+    const [year, month, day] = latestDate
+        .split('-')
+        .map(Number);
+
+    if (
+        year === undefined ||
+        month === undefined ||
+        day === undefined
+    ) {
+        return {
+            ...trend,
+            points: []
+        };
+    }
+
+    const latestTimestamp = Date.UTC(
+        year,
+        month - 1,
+        day
+    );
+
+    const millisecondsPerDay = 24 * 60 * 60 * 1000;
+
+    const startTimestamp =
+        latestTimestamp - period * millisecondsPerDay;
+
+    const filteredPoints = trend.points.filter(point => {
+        const [pointYear, pointMonth, pointDay] =
+            point.date.split('-').map(Number);
+
+        if (
+            pointYear === undefined ||
+            pointMonth === undefined ||
+            pointDay === undefined
+        ) {
+            return false;
+        }
+
+        const timestamp = Date.UTC(
+            pointYear,
+            pointMonth - 1,
+            pointDay
+        );
+
+        return (
+            timestamp >= startTimestamp &&
+            timestamp <= latestTimestamp
+        );
+    });
+
+    return {
+        ...trend,
+        points: filteredPoints
+    };
+}
