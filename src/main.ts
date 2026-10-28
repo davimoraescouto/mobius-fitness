@@ -1,3 +1,4 @@
+
 import {
     App,
     Modal,
@@ -5,95 +6,146 @@ import {
     Plugin,
     PluginSettingTab,
     Setting,
-    TFile,
     TFolder
 } from 'obsidian';
 
-import { ExerciseImageSelector } from './exercise-image';
-
 interface MobiusFitnessSettings {
     dataFolder: string;
-    customEquipment: string[];
 }
 
 const DEFAULT_SETTINGS: MobiusFitnessSettings = {
-    dataFolder: 'Mobius Fitness',
-    customEquipment: []
+    dataFolder: 'Mobius Fitness'
 };
 
-const MUSCLE_GROUPS = [
-    'Peito',
-    'Costas',
-    'Ombros',
-    'Bíceps',
-    'Tríceps',
-    'Quadríceps',
-    'Posterior de coxa',
-    'Glúteos',
-    'Panturrilhas',
-    'Abdômen',
-    'Lombar',
-    'Corpo inteiro',
-    'Cardio'
-];
-
-const DEFAULT_EQUIPMENT = [
-    'Peso corporal',
-    'Halteres',
-    'Kettlebell',
-    'Barra',
-    'Máquina',
-    'Elástico'
-];
-
-const IMAGE_EXTENSIONS = new Set([
-    'png',
-    'jpg',
-    'jpeg',
-    'webp',
-    'gif'
-]);
-
-function yamlString(value: string): string {
-    return JSON.stringify(value);
+interface MeasurementField {
+    key: string;
+    label: string;
+    unit: string;
 }
 
-function yamlList(values: string[]): string[] {
-    return values.map(
-        value => `  - ${yamlString(value)}`
+const MEASUREMENT_GROUPS: {
+    title: string;
+    fields: MeasurementField[];
+}[] = [
+    {
+        title: 'Composição corporal',
+        fields: [
+            { key: 'peso_kg', label: 'Peso corporal', unit: 'kg' },
+            { key: 'gordura_corporal_pct', label: 'Gordura corporal', unit: '%' },
+            { key: 'massa_magra_kg', label: 'Massa corporal magra', unit: 'kg' }
+        ]
+    },
+    {
+        title: 'Tronco',
+        fields: [
+            { key: 'pescoco_cm', label: 'Pescoço', unit: 'cm' },
+            { key: 'ombros_cm', label: 'Ombros', unit: 'cm' },
+            { key: 'peito_cm', label: 'Peito', unit: 'cm' },
+            { key: 'cintura_cm', label: 'Cintura', unit: 'cm' },
+            { key: 'abdomen_cm', label: 'Abdômen', unit: 'cm' },
+            { key: 'quadril_cm', label: 'Quadril', unit: 'cm' }
+        ]
+    },
+    {
+        title: 'Braços',
+        fields: [
+            { key: 'biceps_esquerdo_cm', label: 'Bíceps esquerdo', unit: 'cm' },
+            { key: 'biceps_direito_cm', label: 'Bíceps direito', unit: 'cm' },
+            { key: 'antebraco_esquerdo_cm', label: 'Antebraço esquerdo', unit: 'cm' },
+            { key: 'antebraco_direito_cm', label: 'Antebraço direito', unit: 'cm' }
+        ]
+    },
+    {
+        title: 'Pernas',
+        fields: [
+            { key: 'coxa_esquerda_cm', label: 'Coxa esquerda', unit: 'cm' },
+            { key: 'coxa_direita_cm', label: 'Coxa direita', unit: 'cm' },
+            { key: 'panturrilha_esquerda_cm', label: 'Panturrilha esquerda', unit: 'cm' },
+            { key: 'panturrilha_direita_cm', label: 'Panturrilha direita', unit: 'cm' }
+        ]
+    }
+];
+
+function localDateString(): string {
+    const now = new Date();
+
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+
+
+function validDate(value: string): boolean {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return false;
+    }
+
+    const parts = value.split('-');
+
+    const year = Number(parts[0]);
+    const month = Number(parts[1]);
+    const day = Number(parts[2]);
+
+    const date = new Date(year, month - 1, day);
+
+    return (
+        date.getFullYear() === year &&
+        date.getMonth() === month - 1 &&
+        date.getDate() === day
     );
+}
+
+
+function parseMeasurement(
+    value: string,
+    label: string
+): number | null {
+    const trimmed = value.trim();
+
+    if (!trimmed) {
+        return null;
+    }
+
+    const normalized = trimmed.replace(',', '.');
+
+    if (!/^\d+(\.\d+)?$/.test(normalized)) {
+        throw new Error(
+            `Informe um valor válido para "${label}".`
+        );
+    }
+
+    const number = Number(normalized);
+
+    if (!Number.isFinite(number)) {
+        throw new Error(
+            `Valor inválido para "${label}".`
+        );
+    }
+
+    return number;
 }
 
 export default class MobiusFitnessPlugin extends Plugin {
     settings: MobiusFitnessSettings = {
-        ...DEFAULT_SETTINGS,
-        customEquipment: []
+        ...DEFAULT_SETTINGS
     };
 
     async onload() {
         await this.loadSettings();
 
         this.addRibbonIcon(
-            'dumbbell',
-            'Criar exercício no Mobius Fitness',
-            () => new ExerciseModal(this.app, this).open()
+            'activity',
+            'Nova avaliação física',
+            () => new AssessmentModal(this.app, this).open()
         );
 
         this.addCommand({
-            id: 'create-exercise',
-            name: 'Criar exercício',
+            id: 'create-physical-assessment',
+            name: 'Nova avaliação física',
             callback: () => {
-                new ExerciseModal(this.app, this).open();
-            }
-        });
-
-        // Temporariamente abre o cadastro.
-        // Futuramente abrirá o dashboard.
-        this.addCommand({
-            id: 'open-fitness-dashboard',
-            name: 'Abrir painel de treinos',
-            callback: () => {
-                new ExerciseModal(this.app, this).open();
+                new AssessmentModal(this.app, this).open();
             }
         });
 
@@ -110,193 +162,115 @@ export default class MobiusFitnessPlugin extends Plugin {
             DEFAULT_SETTINGS,
             saved
         );
-
-        if (!Array.isArray(this.settings.customEquipment)) {
-            this.settings.customEquipment = [];
-        }
     }
 
     async saveSettings() {
         await this.saveData(this.settings);
     }
 
-    getMediaFolder(): string {
-        return `${this.settings.dataFolder.trim()}/Midias`;
-    }
+    
+async ensureAssessmentFolder(): Promise<string> {
+    const folder = this.settings.dataFolder.trim();
 
-    getEquipment(): string[] {
-        return [...new Set([
-            ...DEFAULT_EQUIPMENT,
-            ...this.settings.customEquipment
-        ])].sort((a, b) => a.localeCompare(b));
-    }
-
-    async addEquipment(name: string): Promise<string> {
-        const cleanName = name.trim();
-
-        if (!cleanName) {
-            throw new Error(
-                'Informe o nome do equipamento.'
-            );
-        }
-
-        const existing = this.getEquipment().find(
-            item =>
-                item.toLowerCase() === cleanName.toLowerCase()
+    if (!folder || folder === '/') {
+        throw new Error(
+            'Selecione uma pasta de dados válida.'
         );
-
-        if (existing) {
-            return existing;
-        }
-
-        this.settings.customEquipment.push(cleanName);
-        await this.saveSettings();
-
-        return cleanName;
     }
 
-    async ensureDataFolders() {
-        const baseFolder = this.settings.dataFolder.trim();
+    const existing =
+        this.app.vault.getAbstractFileByPath(folder);
 
-        if (!baseFolder || baseFolder === '/') {
+    if (!existing) {
+        await this.app.vault.createFolder(folder);
+    } else if (!(existing instanceof TFolder)) {
+        throw new Error(
+            `O caminho "${folder}" já existe como arquivo.`
+        );
+    }
+
+    return folder;
+}
+
+
+    async saveAssessment(
+        date: string,
+        values: Record<string, string>,
+        diet: string,
+        observations: string
+    ): Promise<string> {
+        if (!validDate(date)) {
+            throw new Error(
+                'Informe uma data válida no formato AAAA-MM-DD.'
+            );
+        }
+
+        const measurements: string[] = [];
+
+        for (const group of MEASUREMENT_GROUPS) {
+            for (const field of group.fields) {
+                const number = parseMeasurement(
+                    values[field.key] ?? '',
+                    field.label
+                );
+
+                if (number !== null) {
+                    measurements.push(
+                        `${field.key}: ${number}`
+                    );
+                }
+            }
+        }
+
+        const base = this.settings.dataFolder.trim();
+
+        if (!base || base === '/') {
             throw new Error(
                 'Selecione uma pasta de dados válida.'
             );
         }
 
-        const folders = [
-            baseFolder,
-            `${baseFolder}/Exercicios`,
-            `${baseFolder}/Fichas`,
-            `${baseFolder}/Sessoes`,
-            `${baseFolder}/Midias`
-        ];
-
-        for (const folder of folders) {
-            const existing =
-                this.app.vault.getAbstractFileByPath(folder);
-
-            if (!existing) {
-                await this.app.vault.createFolder(folder);
-            } else if (!(existing instanceof TFolder)) {
-                throw new Error(
-                    `O caminho "${folder}" já existe como arquivo.`
-                );
-            }
-        }
-    }
-
-    async saveExercise(
-        name: string,
-        primaryMuscle: string,
-        secondaryMuscles: string[],
-        equipment: string[],
-        imagePath: string
-    ) {
-        const cleanName = name.trim();
-
-        if (!cleanName) {
-            throw new Error(
-                'Informe o nome do exercício.'
-            );
-        }
-
-        if (
-            /[\\/:*?"<>|#^\[\]]/.test(cleanName) ||
-            cleanName === '.' ||
-            cleanName === '..'
-        ) {
-            throw new Error(
-                'O nome contém caracteres inválidos.'
-            );
-        }
-
-        if (!MUSCLE_GROUPS.includes(primaryMuscle)) {
-            throw new Error(
-                'Selecione um músculo principal válido.'
-            );
-        }
-
-        if (secondaryMuscles.some(muscle =>
-            !MUSCLE_GROUPS.includes(muscle) ||
-            muscle === primaryMuscle
-        )) {
-            throw new Error(
-                'Seleção de músculos secundários inválida.'
-            );
-        }
-
-        if (imagePath) {
-            const imageFile =
-                this.app.vault.getAbstractFileByPath(
-                    imagePath
-                );
-
-            if (!(imageFile instanceof TFile)) {
-                throw new Error(
-                    'A imagem selecionada não foi encontrada.'
-                );
-            }
-
-            if (
-                !IMAGE_EXTENSIONS.has(
-                    imageFile.extension.toLowerCase()
-                ) ||
-                imageFile.parent?.path !== this.getMediaFolder()
-            ) {
-                throw new Error(
-                    'Selecione uma imagem válida da pasta Midias.'
-                );
-            }
-        }
-
-        const baseFolder =
-            this.settings.dataFolder.trim();
-
-        if (!baseFolder || baseFolder === '/') {
-            throw new Error(
-                'Selecione uma pasta de dados válida.'
-            );
-        }
-
-        const path =
-            `${baseFolder}/Exercicios/${cleanName}.md`;
+        const folder = base;
+        const filename = `MobiusFitness${date}.md`;
+        const path = `${folder}/${filename}`;
 
         if (this.app.vault.getAbstractFileByPath(path)) {
             throw new Error(
-                'Já existe um exercício com esse nome.'
+                'Já existe uma avaliação nessa data.'
             );
         }
 
-        await this.ensureDataFolders();
-
         const content = [
             '---',
-            'tipo: "exercicio"',
-            `nome: ${yamlString(cleanName)}`,
-            `musculo_principal: ${yamlString(primaryMuscle)}`,
-            ...(secondaryMuscles.length
-                ? [
-                    'musculos_secundarios:',
-                    ...yamlList(secondaryMuscles)
-                ]
-                : ['musculos_secundarios: []']),
-            ...(equipment.length
-                ? [
-                    'equipamentos:',
-                    ...yamlList(equipment)
-                ]
-                : ['equipamentos: []']),
-            `imagem: ${yamlString(imagePath)}`,
+            'tipo: avaliacao_fisica',
+            `data: "${date}"`,
+            ...measurements,
             '---',
             '',
-            `# ${cleanName}`,
+            '# Avaliação física',
+            '',
+            '## Rotina alimentar',
+            '',
+            diet.trim() || 'Não registrada.',
             '',
             '## Observações',
+            '',
+            observations.trim() || 'Não registradas.',
             ''
         ].join('\n');
 
+        await this.ensureAssessmentFolder();
+
+        // Segunda verificação antes de criar o arquivo.
+        if (this.app.vault.getAbstractFileByPath(path)) {
+            throw new Error(
+                'Já existe uma avaliação nessa data.'
+            );
+        }
+
         await this.app.vault.create(path, content);
+
+        return path;
     }
 }
 
@@ -328,7 +302,7 @@ class MobiusFitnessSettingTab extends PluginSettingTab {
         new Setting(containerEl)
             .setName('Pasta de dados')
             .setDesc(
-                'Selecione onde serão armazenados exercícios, fichas, sessões e mídias.'
+                'Pasta onde serão armazenadas as avaliações físicas.'
             )
             .addDropdown(dropdown => {
                 const current =
@@ -355,14 +329,13 @@ class MobiusFitnessSettingTab extends PluginSettingTab {
     }
 }
 
-class ExerciseModal extends Modal {
+class AssessmentModal extends Modal {
     plugin: MobiusFitnessPlugin;
 
-    private exerciseName = '';
-    private primaryMuscle = 'Peito';
-    private secondaryMuscles: string[] = [];
-    private selectedEquipment: string[] = [];
-    private imagePath = '';
+    private date = localDateString();
+    private values: Record<string, string> = {};
+    private diet = '';
+    private observations = '';
 
     constructor(
         app: App,
@@ -373,202 +346,136 @@ class ExerciseModal extends Modal {
     }
 
     onOpen() {
-        this.render();
-    }
-
-    render() {
         const { contentEl } = this;
         contentEl.empty();
 
         contentEl.createEl('h2', {
-            text: 'Cadastrar exercício'
+            text: 'Nova avaliação física'
+        });
+
+        contentEl.createEl('p', {
+            text: 'Preencha apenas as medidas que você registrou.'
         });
 
         new Setting(contentEl)
-            .setName('Nome do exercício')
+            .setName('Data da avaliação')
+            .setDesc('Formato: AAAA-MM-DD')
             .addText(text => text
-                .setPlaceholder('Ex.: Supino inclinado')
-                .setValue(this.exerciseName)
+                .setPlaceholder('2026-10-28')
+                .setValue(this.date)
                 .onChange(value => {
-                    this.exerciseName = value;
+                    this.date = value;
                 })
             );
 
+        for (const group of MEASUREMENT_GROUPS) {
+            const section = contentEl.createEl('details');
+
+            // A primeira seção começa aberta.
+            if (group.title === 'Composição corporal') {
+                section.open = true;
+            }
+
+            section.createEl('summary', {
+                text: group.title
+            });
+
+            for (const field of group.fields) {
+                new Setting(section)
+                    .setName(`${field.label} (${field.unit})`)
+                    .addText(text => text
+                        .setPlaceholder('Opcional')
+                        .setValue(
+                            this.values[field.key] ?? ''
+                        )
+                        .onChange(value => {
+                            this.values[field.key] = value;
+                        })
+                    );
+            }
+        }
+
+        contentEl.createEl('h3', {
+            text: 'Rotina alimentar'
+        });
+
+        contentEl.createEl('p', {
+            text: 'Descreva seus hábitos alimentares neste período.'
+        });
+
         new Setting(contentEl)
-            .setName('Músculo principal')
-            .addDropdown(dropdown => {
-                for (const muscle of MUSCLE_GROUPS) {
-                    dropdown.addOption(muscle, muscle);
-                }
+            .addTextArea(text => {
+                text.setPlaceholder(
+                    'Ex.: Café da manhã reforçado, uso de hipercalórico...'
+                );
 
-                dropdown.setValue(this.primaryMuscle);
+                text.setValue(this.diet);
 
-                dropdown.onChange(value => {
-                    this.primaryMuscle = value;
-
-                    this.secondaryMuscles =
-                        this.secondaryMuscles.filter(
-                            muscle => muscle !== value
-                        );
-
-                    this.render();
+                text.onChange(value => {
+                    this.diet = value;
                 });
+
+                text.inputEl.rows = 4;
+                text.inputEl.style.width = '100%';
             });
 
         contentEl.createEl('h3', {
-            text: 'Músculos secundários'
+            text: 'Observações'
         });
-
-        contentEl.createEl('p', {
-            text: 'Selecione os músculos secundários envolvidos.'
-        });
-
-        for (const muscle of MUSCLE_GROUPS) {
-            if (muscle === this.primaryMuscle) {
-                continue;
-            }
-
-            new Setting(contentEl)
-                .setName(muscle)
-                .addToggle(toggle => toggle
-                    .setValue(
-                        this.secondaryMuscles.includes(muscle)
-                    )
-                    .onChange(value => {
-                        if (value) {
-                            if (!this.secondaryMuscles.includes(muscle)) {
-                                this.secondaryMuscles.push(muscle);
-                            }
-                        } else {
-                            this.secondaryMuscles =
-                                this.secondaryMuscles.filter(
-                                    item => item !== muscle
-                                );
-                        }
-                    })
-                );
-        }
-
-        contentEl.createEl('h3', {
-            text: 'Equipamentos'
-        });
-
-        contentEl.createEl('p', {
-            text: 'Selecione um ou mais equipamentos utilizados.'
-        });
-
-        for (const equipment of this.plugin.getEquipment()) {
-            new Setting(contentEl)
-                .setName(equipment)
-                .addToggle(toggle => toggle
-                    .setValue(
-                        this.selectedEquipment.includes(equipment)
-                    )
-                    .onChange(value => {
-                        if (value) {
-                            if (!this.selectedEquipment.includes(equipment)) {
-                                this.selectedEquipment.push(equipment);
-                            }
-                        } else {
-                            this.selectedEquipment =
-                                this.selectedEquipment.filter(
-                                    item => item !== equipment
-                                );
-                        }
-                    })
-                );
-        }
-
-        let newEquipment = '';
 
         new Setting(contentEl)
-            .setName('Novo equipamento')
-            .setDesc(
-                'Adicione um equipamento que não esteja na lista.'
-            )
-            .addText(text => text
-                .setPlaceholder('Ex.: Banco inclinado')
-                .onChange(value => {
-                    newEquipment = value;
-                })
-            )
-            .addButton(button => button
-                .setButtonText('Adicionar')
-                .onClick(async () => {
-                    button.setDisabled(true);
+            .addTextArea(text => {
+                text.setPlaceholder(
+                    'Ex.: Mais disposição, melhora no condicionamento...'
+                );
 
-                    try {
-                        const equipment =
-                            await this.plugin.addEquipment(
-                                newEquipment
-                            );
+                text.setValue(this.observations);
 
-                        if (
-                            !this.selectedEquipment.includes(equipment)
-                        ) {
-                            this.selectedEquipment.push(equipment);
-                        }
+                text.onChange(value => {
+                    this.observations = value;
+                });
 
-                        new Notice(
-                            `Equipamento "${equipment}" adicionado.`
-                        );
-
-                        this.render();
-                    } catch (error) {
-                        new Notice(
-                            error instanceof Error
-                                ? error.message
-                                : 'Erro ao adicionar equipamento.'
-                        );
-
-                        button.setDisabled(false);
-                    }
-                })
-            );
-
-        // Seleção de imagens apenas da pasta Midias.
-        const imageContainer = contentEl.createDiv();
-
-        const imageSelector = new ExerciseImageSelector(
-            this.app,
-            imageContainer,
-            this.plugin.getMediaFolder(),
-            this.imagePath,
-            path => {
-                this.imagePath = path;
-            }
-        );
-
-        imageSelector.render();
+                text.inputEl.rows = 3;
+                text.inputEl.style.width = '100%';
+            });
 
         new Setting(contentEl)
             .addButton(button => button
-                .setButtonText('Salvar exercício')
+                .setButtonText('Salvar avaliação')
                 .setCta()
                 .onClick(async () => {
                     button.setDisabled(true);
 
                     try {
-                        await this.plugin.saveExercise(
-                            this.exerciseName,
-                            this.primaryMuscle,
-                            this.secondaryMuscles,
-                            this.selectedEquipment,
-                            this.imagePath
-                        );
+                        const path =
+                            await this.plugin.saveAssessment(
+                                this.date,
+                                this.values,
+                                this.diet,
+                                this.observations
+                            );
 
                         new Notice(
-                            'Exercício cadastrado com sucesso!'
+                            'Avaliação física salva com sucesso!'
                         );
+
+                        const file =
+                            this.app.vault.getFileByPath(path);
+
+                        if (file) {
+                            await this.app.workspace
+                                .getLeaf(false)
+                                .openFile(file);
+                        }
 
                         this.close();
                     } catch (error) {
                         new Notice(
                             error instanceof Error
                                 ? error.message
-                                : 'Erro ao salvar exercício.'
+                                : 'Erro ao salvar avaliação.'
                         );
-
+                    } finally {
                         button.setDisabled(false);
                     }
                 })
