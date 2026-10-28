@@ -1,2 +1,2 @@
 # mobius-fitness
-An offline-first workout tracker for Obsidian
+An offline-first workout companion for Obsidian
