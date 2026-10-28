@@ -1,145 +1,150 @@
+[English](README.md) | [Português (Brasil)](README.pt-BR.md)
 
 # Mobius Fitness
 
-Um plugin para Obsidian dedicado ao acompanhamento da evolução física e dos hábitos relacionados à saúde.
+An offline-first Obsidian plugin for tracking physical progress, body measurements, and health-related habits.
 
-O Mobius Fitness permite registrar avaliações corporais periódicas em arquivos Markdown, mantendo seus dados organizados, acessíveis e armazenados localmente no seu vault.
+Mobius Fitness allows you to record periodic physical assessments in Markdown files, keeping your data organized, accessible, and stored locally in your Obsidian vault.
 
-## Objetivo
+## Purpose
 
-Acompanhar a evolução física ao longo do tempo sem substituir aplicativos especializados em execução de treinos.
+Mobius Fitness is designed to help you monitor your physical progress over time without replacing dedicated workout-tracking applications.
 
-O Mobius Fitness complementa ferramentas como o Hevy, oferecendo um espaço pessoal para registrar medidas corporais, alimentação e observações.
+It complements tools such as Hevy by providing a personal space to record body measurements, nutrition habits, and observations about your physical well-being.
 
-## Funcionalidades atuais
+## Current Features
 
-- Cadastro de avaliações físicas por data.
-- Registro opcional de peso e composição corporal.
-- Registro de medidas de tronco, braços e pernas.
-- Campo livre para rotina alimentar.
-- Campo livre para observações gerais.
-- Organização em arquivos Markdown.
-- Armazenamento local, sem necessidade de conta ou internet.
-- Compatibilidade com Obsidian para desktop e dispositivos móveis.
+- Create physical assessments with custom dates.
+- Optionally record body weight and body composition.
+- Track torso, arm, and leg measurements.
+- Add free-text notes about nutrition habits.
+- Record general observations.
+- Store assessments as Markdown files.
+- Keep your data locally without requiring an account or internet connection.
+- Use the plugin on both desktop and mobile versions of Obsidian.
 
-## Medidas disponíveis
+## Available Measurements
 
-### Composição corporal
+### Body Composition
 
-- Peso corporal (kg)
-- Gordura corporal (%)
-- Massa corporal magra (kg)
+- Body weight (kg)
+- Body fat percentage (%)
+- Lean body mass (kg)
 
-### Tronco
+### Torso
 
-- Pescoço
-- Ombros
-- Peito
-- Cintura
-- Abdômen
-- Quadril
+- Neck
+- Shoulders
+- Chest
+- Waist
+- Abdomen
+- Hips
 
-### Braços
+### Arms
 
-- Bíceps esquerdo e direito
-- Antebraço esquerdo e direito
+- Left and right biceps
+- Left and right forearms
 
-### Pernas
+### Legs
 
-- Coxa esquerda e direita
-- Panturrilha esquerda e direita
+- Left and right thighs
+- Left and right calves
 
-Todas as medidas são opcionais.
+All measurements are optional.
 
-## Armazenamento
+## Data Storage
 
-O usuário escolhe nas configurações a pasta onde deseja salvar suas avaliações.
+Users can select the folder where physical assessments will be saved through the plugin settings.
 
-Cada avaliação é armazenada diretamente nessa pasta, seguindo a nomenclatura:
+Each assessment is stored directly in the selected folder using the following naming convention:
 
 `MobiusFitnessYYYY-MM-DD.md`
 
-Exemplo:
+Example:
 
 ```text
-Avaliações Físicas/
+Physical Assessments/
 ├── MobiusFitness2026-08-10.md
 └── MobiusFitness2026-10-28.md
 ```
 
-Os valores numéricos são registrados nas propriedades YAML, enquanto a rotina alimentar e as observações ficam no corpo da nota.
+Numeric measurements are stored as YAML frontmatter properties, while nutrition habits and general observations are saved in the Markdown note body.
 
-## Como utilizar
+This structure keeps assessment data readable and accessible through Obsidian's native features.
 
-1. Instale e habilite o plugin no Obsidian.
-2. Nas configurações do Mobius Fitness, selecione a pasta de dados.
-3. Execute o comando "Mobius Fitness: Nova avaliação física" ou utilize o ícone do plugin.
-4. Informe a data e as medidas desejadas.
-5. Registre sua rotina alimentar e observações, se desejar.
-6. Salve a avaliação.
+## How to Use
 
-O arquivo Markdown será criado na pasta configurada.
+1. Install and enable the plugin in Obsidian.
+2. Open the Mobius Fitness settings and select a data folder.
+3. Run the **"Mobius Fitness: Nova avaliação física"** command or use the plugin's ribbon icon.
+4. Enter the assessment date and any measurements you want to record.
+5. Optionally add notes about your nutrition habits and general observations.
+6. Save the assessment.
 
-## Desenvolvimento
+A Markdown file will be created in the configured folder.
 
-Requisitos:
+## Development
+
+### Requirements
 
 - Node.js
 - npm
-- Obsidian para testar o plugin
+- Obsidian for plugin testing
 
-Instale as dependências:
+### Install Dependencies
 
 ```bash
 npm ci
 ```
 
-Compile:
+### Build
 
 ```bash
 npm run build
 ```
 
-Para testar manualmente, copie `main.js`, `manifest.json` e `styles.css` para a pasta do plugin no vault:
+### Manual Installation for Testing
+
+Copy the generated `main.js`, `manifest.json`, and `styles.css` (if present) into the plugin directory inside your Obsidian vault:
 
 ```text
 .obsidian/plugins/mobius-fitness/
 ```
 
-Depois, habilite ou recarregue o plugin no Obsidian.
+Then enable or reload the plugin in Obsidian.
 
-## Planejamento
+## Roadmap
 
-### Próximas funcionalidades
+### Planned Features
 
-- Histórico de avaliações físicas.
-- Gráficos de evolução das medidas corporais.
-- Filtros por período.
-- Comparação entre avaliações.
+- Physical assessment history.
+- Body measurement progress charts.
+- Date-range filters.
+- Comparison between assessments.
 
-### Funcionalidades futuras
+### Future Possibilities
 
-- Importação de registros de treino exportados do Hevy, conforme os formatos disponíveis.
-- Integração dos dados de treino com o acompanhamento físico.
+- Import workout records exported from Hevy, depending on supported export formats.
+- Combine workout data with physical progress tracking.
 
-## Privacidade
+## Privacy
 
-Os dados são armazenados localmente no vault do Obsidian.
+All assessment data is stored locally in your Obsidian vault.
 
-O plugin não exige cadastro, conexão com serviços externos ou envio de informações pessoais para servidores próprios.
+Mobius Fitness does not require an account, external service connections, or the transmission of personal information to dedicated servers.
 
-O Mobius Fitness é uma ferramenta de registro e acompanhamento pessoal. Não substitui avaliação ou orientação de profissionais de saúde.
+Mobius Fitness is intended for personal tracking and record-keeping purposes. It is not a substitute for professional medical assessment or healthcare advice.
 
-## Estado do projeto
+## Project Status
 
-Em desenvolvimento.
+**Under active development.**
 
-As funcionalidades atuais estão sendo testadas no Obsidian, incluindo dispositivos Android.
+Current features are being tested in Obsidian, including on Android devices.
 
-## Autor
+## Author
 
 Davi Couto
 
-## Licença
+## License
 
 0BSD
