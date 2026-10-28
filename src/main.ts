@@ -1,6 +1,8 @@
 
 import { Plugin } from 'obsidian';
 
+import { AssessmentReader } from './assessment-reader';
+import { AssessmentHistoryModal } from './assessment-history-modal';
 import { AssessmentModal } from './assessment-modal';
 import { AssessmentService } from './assessment-service';
 
@@ -21,12 +23,14 @@ export default class MobiusFitnessPlugin extends Plugin {
     async onload(): Promise<void> {
         await this.loadSettings();
 
+        // Ícone lateral para criar uma avaliação física.
         this.addRibbonIcon(
             'activity',
             'Nova avaliação física',
             () => this.openAssessmentModal()
         );
 
+        // Comando para criar uma nova avaliação física.
         this.addCommand({
             id: 'create-physical-assessment',
             name: 'Nova avaliação física',
@@ -35,6 +39,16 @@ export default class MobiusFitnessPlugin extends Plugin {
             }
         });
 
+        // Comando para visualizar o histórico de avaliações.
+        this.addCommand({
+            id: 'open-physical-assessment-history',
+            name: 'Histórico de avaliações físicas',
+            callback: () => {
+                this.openAssessmentHistory();
+            }
+        });
+
+        // Configurações do plugin.
         this.addSettingTab(
             new MobiusFitnessSettingTab(this.app, this)
         );
@@ -50,6 +64,18 @@ export default class MobiusFitnessPlugin extends Plugin {
                     diet,
                     observations
                 )
+        ).open();
+    }
+
+    private openAssessmentHistory(): void {
+        const reader = new AssessmentReader(
+            this.app,
+            this.settings.dataFolder
+        );
+
+        new AssessmentHistoryModal(
+            this.app,
+            reader
         ).open();
     }
 
