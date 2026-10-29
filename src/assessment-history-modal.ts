@@ -99,53 +99,29 @@ export class AssessmentHistoryModal extends Modal {
             cls: 'mobius-history-item'
         });
 
-        section.style.padding = '12px 0';
-        section.style.borderBottom =
-            '1px solid var(--background-modifier-border)';
-
         const header = section.createEl('button', {
             text: formatDate(assessment.date),
             cls: 'mobius-history-open'
         });
 
-        header.style.display = 'block';
-        header.style.width = '100%';
-        header.style.textAlign = 'left';
-        header.style.fontWeight = '600';
-        header.style.marginBottom = '8px';
-
-        header.addEventListener('click', async () => {
-            try {
-                await this.app.workspace
-                    .getLeaf(false)
-                    .openFile(assessment.file);
-
-                this.close();
-            } catch (error) {
-                console.error(
-                    'Mobius Fitness: failed to open assessment.',
-                    error
-                );
-
-                new Notice(
-                    t('assessmentHistory', 'openError')
-                );
-            }
+        header.addEventListener('click', () => {
+            void this.openAssessment(assessment);
         });
 
-if (assessment.status !== 'valid') {
-    const warning = section.createEl('p', {
-        text: assessment.warning ??
-            t('assessmentHistory', 'invalidAssessment')
-    });
-
-            warning.style.color =
-                assessment.status === 'pending'
-                    ? 'var(--text-muted)'
-                    : 'var(--text-error)';
-
-            warning.style.fontSize = '0.9em';
-            warning.style.margin = '4px 0';
+        if (assessment.status !== 'valid') {
+            section.createEl('p', {
+                text: assessment.warning ??
+                    t(
+                        'assessmentHistory',
+                        'invalidAssessment'
+                    ),
+                cls: [
+                    'mobius-history-warning',
+                    assessment.status === 'pending'
+                        ? 'mobius-history-warning-pending'
+                        : 'mobius-history-warning-invalid'
+                ]
+            });
 
             return;
         }
@@ -166,29 +142,49 @@ if (assessment.status !== 'valid') {
                 const line = section.createDiv();
 
                 line.createSpan({
-                    text: `${getMeasurementLabel(field.key)}: `
+                    text:
+                        `${getMeasurementLabel(field.key)}: `
                 });
 
-                const result = line.createSpan({
+                line.createSpan({
                     text: formatMeasurement(
                         value,
                         field.unit
-                    )
+                    ),
+                    cls: 'mobius-history-measurement-value'
                 });
-
-                result.style.fontWeight = '500';
             }
         }
 
         if (!hasMeasurements) {
-            const empty = section.createEl('p', {
+            section.createEl('p', {
                 text: t(
                     'assessmentHistory',
                     'noMeasurements'
-                )
+                ),
+                cls: 'mobius-history-empty'
             });
+        }
+    }
 
-            empty.style.color = 'var(--text-muted)';
+    private async openAssessment(
+        assessment: AssessmentData
+    ): Promise<void> {
+        try {
+            await this.app.workspace
+                .getLeaf(false)
+                .openFile(assessment.file);
+
+            this.close();
+        } catch (error) {
+            console.error(
+                'Mobius Fitness: failed to open assessment.',
+                error
+            );
+
+            new Notice(
+                t('assessmentHistory', 'openError')
+            );
         }
     }
 

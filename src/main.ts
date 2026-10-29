@@ -126,15 +126,25 @@ export default class MobiusFitnessPlugin extends Plugin {
         ).open();
     }
 
-    async loadSettings(): Promise<void> {
-        const saved = await this.loadData();
 
-        this.settings = Object.assign(
-            {},
-            DEFAULT_SETTINGS,
-            saved
-        );
+    async loadSettings(): Promise<void> {
+        const saved: unknown = await this.loadData();
+
+        if (
+            saved !== null &&
+            typeof saved === 'object' &&
+            !Array.isArray(saved)
+        ) {
+            this.settings = Object.assign(
+                {},
+                DEFAULT_SETTINGS,
+                saved
+            );
+        } else {
+            this.settings = { ...DEFAULT_SETTINGS };
+        }
     }
+
 
     async saveSettings(): Promise<void> {
         await this.saveData(this.settings);

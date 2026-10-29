@@ -6,3 +6,101 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+/* Assessment form textareas */
+.mobius-fitness-textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+
+/* Assessment comparison cards */
+.mobius-comparison-card {
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    background-color: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+}
+
+.mobius-comparison-title {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.mobius-comparison-values {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.mobius-comparison-label {
+    color: var(--text-muted);
+    font-size: 0.85em;
+}
+
+.mobius-comparison-variation {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--background-modifier-border);
+}
+
+
+/* Assessment history */
+.mobius-history-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.mobius-history-open {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.mobius-history-warning {
+    font-size: 0.9em;
+    margin: 4px 0;
+}
+
+.mobius-history-warning-pending {
+    color: var(--text-muted);
+}
+
+.mobius-history-warning-invalid {
+    color: var(--text-error);
+}
+
+.mobius-history-measurement-value {
+    font-weight: 500;
+}
+
+.mobius-history-empty {
+    color: var(--text-muted);
+}
+
+
+/* Assessment trends chart */
+.mobius-trends-chart {
+    display: block;
+    max-width: 100%;
+}
+
+.mobius-trends-details {
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    background-color: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+}
+
+.mobius-trends-details-title {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.mobius-trends-point {
+    cursor: pointer;
+}

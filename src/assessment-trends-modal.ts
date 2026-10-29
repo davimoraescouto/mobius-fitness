@@ -363,8 +363,7 @@ export class AssessmentTrendsModal extends Modal {
             ).replace('{measurement}', label)
         );
 
-        svg.style.display = 'block';
-        svg.style.maxWidth = '100%';
+        svg.classList.add('mobius-trends-chart');
 
         container.appendChild(svg);
 
@@ -373,26 +372,13 @@ export class AssessmentTrendsModal extends Modal {
             cls: 'mobius-trends-details'
         });
 
-        details.style.marginTop = '12px';
-        details.style.padding = '12px';
-        details.style.borderRadius = '8px';
-        details.style.backgroundColor =
-            'var(--background-secondary)';
-        details.style.border =
-            '1px solid var(--background-modifier-border)';
-
-        const detailsTitle = details.createEl(
-            'strong',
-            {
-                text: t(
-                    'assessmentTrends',
-                    'selectedAssessment'
-                )
-            }
-        );
-
-        detailsTitle.style.display = 'block';
-        detailsTitle.style.marginBottom = '8px';
+        details.createEl('strong', {
+            cls: 'mobius-trends-details-title',
+            text: t(
+                'assessmentTrends',
+                'selectedAssessment'
+            )
+        });
 
         const detailsContent = details.createDiv();
 
@@ -627,7 +613,7 @@ export class AssessmentTrendsModal extends Modal {
                 }
             );
 
-            circle.style.cursor = 'pointer';
+            circle.classList.add('mobius-trends-point');
 
             circle.addEventListener(
                 'click',

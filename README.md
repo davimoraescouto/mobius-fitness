@@ -1,41 +1,34 @@
-<<<<<<< HEAD
-# mobius-fitness
-An offline-first workout companion for Obsidian
-=======
-[English](README.md) | [Português (Brasil)](README.pt-BR.md)
+Mobius Fitness
 
-# Mobius Fitness
+An offline-first physical assessment and body measurement tracker for Obsidian.
 
-An offline-first Obsidian plugin for tracking physical progress, body measurements, and health-related habits.
+Mobius Fitness helps you record physical assessments, track body measurements, compare results, and visualize your progress over time — directly inside your Obsidian vault.
 
-Mobius Fitness allows you to record periodic physical assessments in Markdown files, keeping your data organized, accessible, and stored locally in your Obsidian vault.
+Your assessment records are stored as Markdown files, keeping your data accessible, portable, and under your control.
 
-## Purpose
+Features
 
-Mobius Fitness is designed to help you monitor your physical progress over time without replacing dedicated workout-tracking applications.
+- Physical assessments: Record assessments with custom dates and optional measurements.
+- Assessment history: Browse previous assessments and review recorded measurements.
+- Assessment comparison: Compare two assessments to identify changes in body measurements.
+- Progress charts: Visualize measurement trends over time.
+- Date filters: Explore trends using 30, 90, 180, or 365-day periods, or view all available records.
+- Flexible measurements: Track body composition, torso, arms, and legs.
+- Personal notes: Record nutrition-related notes and general observations.
+- Local Markdown storage: Keep assessment records inside your Obsidian vault.
+- Multilingual interface: Available in English and Brazilian Portuguese, with automatic language detection and manual selection.
 
-It complements tools such as Hevy by providing a personal space to record body measurements, nutrition habits, and observations about your physical well-being.
+Mobius Fitness focuses on physical assessments and complements dedicated workout-tracking applications rather than replacing them.
 
-## Current Features
+Supported Measurements
 
-- Create physical assessments with custom dates.
-- Optionally record body weight and body composition.
-- Track torso, arm, and leg measurements.
-- Add free-text notes about nutrition habits.
-- Record general observations.
-- Store assessments as Markdown files.
-- Keep your data locally without requiring an account or internet connection.
-- Use the plugin on both desktop and mobile versions of Obsidian.
-
-## Available Measurements
-
-### Body Composition
+Body Composition
 
 - Body weight (kg)
 - Body fat percentage (%)
 - Lean body mass (kg)
 
-### Torso
+Torso
 
 - Neck
 - Shoulders
@@ -44,112 +37,120 @@ It complements tools such as Hevy by providing a personal space to record body m
 - Abdomen
 - Hips
 
-### Arms
+Arms
 
 - Left and right biceps
 - Left and right forearms
 
-### Legs
+Legs
 
 - Left and right thighs
 - Left and right calves
 
 All measurements are optional.
 
-## Data Storage
+Getting Started
 
-Users can select the folder where physical assessments will be saved through the plugin settings.
+1. Install and enable Mobius Fitness in Obsidian.
+2. Open the plugin settings and choose a folder for your assessment records.
+3. Run the command to create a new physical assessment or use the plugin's ribbon icon.
+4. Select an assessment date and enter the measurements you want to record.
+5. Add optional notes and observations.
+6. Save your assessment.
 
-Each assessment is stored directly in the selected folder using the following naming convention:
+You can then use the history, comparison, and progress features to review your data over time.
 
-`MobiusFitnessYYYY-MM-DD.md`
+Data Storage
+
+Each assessment is saved as a Markdown file in the folder selected in the plugin settings.
 
 Example:
 
-```text
 Physical Assessments/
 ├── MobiusFitness2026-08-10.md
 └── MobiusFitness2026-10-28.md
-```
 
-Numeric measurements are stored as YAML frontmatter properties, while nutrition habits and general observations are saved in the Markdown note body.
+Numeric measurements are stored as YAML frontmatter properties, while personal notes and observations are stored in the Markdown body.
 
-This structure keeps assessment data readable and accessible through Obsidian's native features.
+Assessment files remain accessible through Obsidian's native file browser and Markdown editor.
 
-## How to Use
+Installation
 
-1. Install and enable the plugin in Obsidian.
-2. Open the Mobius Fitness settings and select a data folder.
-3. Run the **"Mobius Fitness: Nova avaliação física"** command or use the plugin's ribbon icon.
-4. Enter the assessment date and any measurements you want to record.
-5. Optionally add notes about your nutrition habits and general observations.
-6. Save the assessment.
+Mobius Fitness is currently being prepared for submission to the Obsidian Community Plugins directory.
 
-A Markdown file will be created in the configured folder.
+Manual Installation
 
-## Development
+1. Download or build the plugin files.
+2. Create the following folder inside your Obsidian vault:
 
-### Requirements
+.obsidian/plugins/mobius-fitness/
+
+3. Copy "main.js", "manifest.json", and "styles.css" (if generated) into that folder.
+4. Open Obsidian and enable Mobius Fitness under Settings → Community plugins.
+
+Development
+
+Requirements
 
 - Node.js
 - npm
-- Obsidian for plugin testing
+- Obsidian for testing
 
-### Install Dependencies
+Install Dependencies
 
-```bash
 npm ci
-```
 
-### Build
+Build
 
-```bash
 npm run build
-```
 
-### Manual Installation for Testing
+The project uses TypeScript and the Obsidian Plugin API.
 
-Copy the generated `main.js`, `manifest.json`, and `styles.css` (if present) into the plugin directory inside your Obsidian vault:
+Language Support
 
-```text
-.obsidian/plugins/mobius-fitness/
-```
+Mobius Fitness currently supports:
 
-Then enable or reload the plugin in Obsidian.
+- English
+- Português (Brasil)
 
-## Roadmap
+By default, the plugin follows the language configured in Obsidian. You can also select your preferred language manually in the plugin settings.
 
-### Planned Features
+Privacy
 
-- Physical assessment history.
-- Body measurement progress charts.
-- Date-range filters.
-- Comparison between assessments.
+Mobius Fitness stores assessment records locally in your Obsidian vault.
 
-### Future Possibilities
+The plugin does not require an account or a dedicated external service to manage your assessments.
 
-- Import workout records exported from Hevy, depending on supported export formats.
-- Combine workout data with physical progress tracking.
+If you synchronize your vault using Obsidian Sync or another synchronization provider, your assessment files may also be stored by that provider according to its configuration.
 
-## Privacy
+Roadmap
 
-All assessment data is stored locally in your Obsidian vault.
+Potential future improvements include:
 
-Mobius Fitness does not require an account, external service connections, or the transmission of personal information to dedicated servers.
+- A dashboard summarizing recent physical progress.
+- Optional measurement goals.
+- CSV export.
+- Improved mobile usability and accessibility.
+- Additional visualization and reporting options.
 
-Mobius Fitness is intended for personal tracking and record-keeping purposes. It is not a substitute for professional medical assessment or healthcare advice.
+These features are ideas for future development and are not included in the current release.
 
-## Project Status
+Disclaimer
 
-**Under active development.**
+Mobius Fitness is intended for personal record-keeping and progress tracking.
 
-Current features are being tested in Obsidian, including on Android devices.
+It does not provide medical diagnoses or replace professional medical assessment or healthcare advice.
 
-## Author
+Project Status
+
+Version 0.1.0 — Under active development.
+
+The plugin is being prepared for its first public release.
+
+Author
 
 Davi Couto
 
-## License
+License
 
 0BSD
->>>>>>> feat/physical-assessments

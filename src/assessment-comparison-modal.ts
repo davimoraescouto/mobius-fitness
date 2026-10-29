@@ -242,6 +242,7 @@ export class AssessmentComparisonModal extends Modal {
         }
     }
 
+
     private renderMeasurementCard(
         container: HTMLElement,
         measurement: MeasurementComparison
@@ -250,41 +251,24 @@ export class AssessmentComparisonModal extends Modal {
             cls: 'mobius-comparison-card'
         });
 
-        card.style.padding = '12px';
-        card.style.marginBottom = '10px';
-        card.style.borderRadius = '8px';
-        card.style.backgroundColor =
-            'var(--background-secondary)';
-        card.style.border =
-            '1px solid var(--background-modifier-border)';
-
-        const title = card.createEl('strong', {
+        card.createEl('strong', {
+            cls: 'mobius-comparison-title',
             text: getMeasurementLabel(measurement.key)
         });
-
-        title.style.display = 'block';
-        title.style.marginBottom = '10px';
 
         const values = card.createDiv({
             cls: 'mobius-comparison-values'
         });
 
-        values.style.display = 'grid';
-        values.style.gridTemplateColumns =
-            'repeat(2, minmax(0, 1fr))';
-        values.style.gap = '12px';
-
         const previous = values.createDiv();
 
-        const previousLabel = previous.createDiv({
+        previous.createDiv({
+            cls: 'mobius-comparison-label',
             text: t(
                 'assessmentComparison',
                 'previous'
             )
         });
-
-        previousLabel.style.color = 'var(--text-muted)';
-        previousLabel.style.fontSize = '0.85em';
 
         previous.createEl('strong', {
             text:
@@ -294,15 +278,13 @@ export class AssessmentComparisonModal extends Modal {
 
         const current = values.createDiv();
 
-        const currentLabel = current.createDiv({
+        current.createDiv({
+            cls: 'mobius-comparison-label',
             text: t(
                 'assessmentComparison',
                 'current'
             )
         });
-
-        currentLabel.style.color = 'var(--text-muted)';
-        currentLabel.style.fontSize = '0.85em';
 
         current.createEl('strong', {
             text:
@@ -310,12 +292,9 @@ export class AssessmentComparisonModal extends Modal {
                 measurement.unit
         });
 
-        const variation = card.createDiv();
-
-        variation.style.marginTop = '10px';
-        variation.style.paddingTop = '8px';
-        variation.style.borderTop =
-            '1px solid var(--background-modifier-border)';
+        const variation = card.createDiv({
+            cls: 'mobius-comparison-variation'
+        });
 
         const absoluteDifference =
             measurement.unit === '%'
@@ -352,6 +331,7 @@ export class AssessmentComparisonModal extends Modal {
                 `(${percentageDifference})`
         });
     }
+
 
     onClose(): void {
         this.contentEl.empty();

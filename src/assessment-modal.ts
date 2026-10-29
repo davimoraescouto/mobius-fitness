@@ -118,7 +118,7 @@ export class AssessmentModal extends Modal {
                 });
 
                 text.inputEl.rows = 4;
-                text.inputEl.style.width = '100%';
+                text.inputEl.addClass('mobius-fitness-textarea');
             });
 
         contentEl.createEl('h3', {
@@ -141,7 +141,7 @@ export class AssessmentModal extends Modal {
                 });
 
                 text.inputEl.rows = 3;
-                text.inputEl.style.width = '100%';
+                text.inputEl.addClass('mobius-fitness-textarea');
             });
 
         new Setting(contentEl)
