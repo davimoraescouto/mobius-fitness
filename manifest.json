@@ -4,7 +4,6 @@
   "name": "Mobius Fitness",
   "version": "0.1.0",
   "minAppVersion": "1.5.7",
-  "description": "Track physical assessments, body measurements, and fitness progress locally in Obsidian.",
-  "author": "Davi Couto",
+  "description": "Track physical assessments, body measurements, and fitness progress with local Markdown notes.",  "author": "Davi Couto",
   "isDesktopOnly": false
 }
