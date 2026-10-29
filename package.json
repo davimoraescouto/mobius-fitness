@@ -1,7 +1,6 @@
-
 {
   "name": "mobius-fitness",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "An offline-first physical assessment and fitness progress tracker for Obsidian.",
   "main": "main.js",
   "type": "module",
